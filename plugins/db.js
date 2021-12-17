@@ -9,6 +9,7 @@ function connection(){
         password : dbMysql.password,
         port : dbMysql.port,
         database :dbMysql.database,
+        multipleStatements:true //同时执行多条sql语句
     })
 }
 
@@ -29,7 +30,9 @@ function query(sql,data){
             })
         }catch(e){
             reject(e)
-        }
+        }finally {
+            conn.end()
+          }
     })
 }
 

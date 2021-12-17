@@ -1,8 +1,8 @@
 const Database = {}
 
-Database.host = '120.77.81.94'
+Database.host = 'localhost'
 Database.user ='root'
-Database.password = 'HUANGbibi527_mysql'
+Database.password = '123456'
 Database.port = 3306
 Database.database = 'pay'//数据库名
 

@@ -66,40 +66,93 @@ exports.login = async(req,res)=>{
         }
     }
     console.log(data)
+    
     res.send(data);
 }
 
+exports.userInfo = async(req,res)=>{
+    let sql = 'select * from userinfo'
+    let info = []
+    const results = await query(sql,info)
+    if(!results){
+        data={
+            state:e
+        }
+    }else{
+        data={
+            state:s,
+            list:results
+        }
+    }
+    res.send(data)
+}
+//支付方式
+exports.paytypeList = async(req,res)=>{
+    let sql = 'select * from pay_type_list'
+    let info = []
+    const results = await query(sql,info)
+    if(!results){
+        data={
+            state:e
+        }
+    }else{
+        data={
+            state:s,
+            list:results
+        }
+    }
+    res.send(data)
+}
+exports.addPayType=async(req,res)=>{
+    let sql ='INSERT INTO pay_type_list(info) values(?)'
+    let info = [req.body.pay]
+    const results = await query(sql,info)
+    if(!results){
+        data={
+            state:e
+        }
+    }else{
+        data={
+            state:s,
+        }
+    }
+    res.send(data)
+}
+
 exports.paylist = async(req,res)=>{
-    let sql = 'select * from pay_list'
+    let sql = `SELECT * FROM (pay_list INNER JOIN userinfo ON pay_list.userId=userinfo.userId) INNER JOIN beuse ON pay_list.beuse=beuse.beuse`
     let sort = 'order by date desc'
     let info = []
+    let changeSql=''
     let filter =''
     const params  = req.body
-    if(params.name && !params.pay_type && !params.date){
-        filter = 'where name like ?'
-        info=['%'+params.name+'%']
+
+    let arrParams = [params.userId,params.pay_type,params.date||params.month,params.beuse]
+    let userSql = `pay_list.userId = ${params.userId}`
+    let payTypeSql = `pay_type = ${params.pay_type}`
+    let beuseSql = `pay_list.beuse = ${params.beuse}`
+    let dateSql = ''
+    if(params.date){
+        
+            dateSql = `date = '${params.date}'`
+    }else{
+            dateSql = `month(date) = month('${params.month}')`
     }
-    if(params.pay_type && !params.name && !params.date){
-        filter = `where pay_type = ?`
-        info=[params.pay_type]
+    let arrSql =[userSql,payTypeSql,dateSql,beuseSql]
+
+    let flag = true
+    for (const i in arrParams) {
+        // console.log(i)
+        if(arrParams[i]&&flag){
+            // console.log('666')
+            sql=`${sql} where ${arrSql[i]}` 
+            flag=false
+        }
+        if(arrParams[i]&&!flag){
+            changeSql=`and ${arrSql[i]}` 
+        }
     }
-    if(params.date && !params.name && !params.pay_type){
-        filter = `where date = ?`
-        info=[params.date]
-    }
-    if(params.date && params.name && !params.pay_type){
-        filter = `where date = ? and where name = ?`
-        info=[params.date,'%'+params.name+'%']
-    }
-    if(params.date && !params.name && params.pay_type){
-        filter = `where date = ? and where pay_type = ?`
-        info=[params.date,params.pay_type]
-    }
-     if(params.pay_type && params.name && params.date){
-        filter = `where name like ? and pay_type = ? and date = ?`
-        info=['%'+params.name+'%',params.pay_type,params.date]
-    }
-    sql = `${sql} ${filter} ${sort}`
+    sql = `${sql} ${changeSql} ${sort}`
 
     const results =await query(sql,info)
     if(!results){
@@ -114,13 +167,15 @@ exports.paylist = async(req,res)=>{
     }
     res.send(data)
 }
-
+//支付列表
 exports.addPay = async(req,res)=>{
-    let sql = 'INSERT INTO pay_list(pay_type,money,date,remark,name) values (?,?,?,?,?)'
+    let sql = 'INSERT INTO pay_list(pay_type,money,date,remark,userId,beuse) values (?,?,?,?,?,?)'
     const params  = req.body
-    let info = [params.pay_type,params.money,params.date,params.remark,params.name]
+    let info = [params.pay_type,params.money,params.date,params.remark,params.userId,params.beuse]
     if(params.id){
-        sql = `update pay_list set pay_type=?,money=?,date=?,remark=?, name=? where id = ${params.id}`}
+        sql = `update pay_list set pay_type=?,money=?,date=?,remark=?, userId=? ,beuse=? where id = ${params.id}`
+    }
+
     const results = await query(sql,info) 
     console.log(results)
     if(results[0]==''){
@@ -151,5 +206,82 @@ exports.deletePay=async(req,res)=>{
     res.send(data)
 }
 exports.monthPayList=async(req,res)=>{
-    
+    let sql =''
+    let info = [req.body.id]
+}
+
+exports.addUser=async(req,res)=>{
+    let sql ='INSERT INTO userinfo(name) values(?)'
+    let info = [req.body.name]
+    const results = await query(sql,info)
+    if(!results){
+        data={
+            state:e
+        }
+    }else{
+        data={
+            state:s,
+        }
+    }
+    res.send(data)
+}
+
+//支出类型
+exports.beuseList = async(req,res)=>{
+    let sql = 'select * from beuse order by createTime desc'
+    let info = []
+    const results = await query(sql,info)
+    if(!results){
+        data={
+            state:e
+        }
+    }else{
+        data={
+            state:s,
+            list:results
+        }
+    }
+    res.send(data)
+}
+exports.addBeuse=async(req,res)=>{
+    let sql ='INSERT INTO beuse(beType,color,state) values(?,?,0)'
+    let info = [req.body.beType,req.body.color]
+    const beuse = req.body.beuse
+    if(beuse){
+        sql = `updata beuse set beType = ? and color = ? where beuse = ${beuse}`
+    }
+    const results = await query(sql,info)
+    if(!results){
+        data={
+            state:e
+        }
+    }else{
+        data={
+            state:s,
+        }
+    }
+    res.send(data)
+}
+exports.saveBeuseList=async(req,res)=>{
+    let sqls = ''
+    let info = req.body.list
+    info.forEach(el => {
+        if(el.state==3){
+            sqls = `${sqls} delete from beuse  where beuse = ${el.beuse} ;`
+        }else{
+            sqls = `${sqls} UPDATE beuse set state = ${el.state} where beuse = ${el.beuse} ;`
+        }
+
+    });
+    const results = await query(sqls)
+    if(!results){
+        data={
+            state:e
+        }
+    }else{
+        data={
+            state:s
+        }
+    }
+    res.send(data)
 }

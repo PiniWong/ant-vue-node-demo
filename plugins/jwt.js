@@ -7,8 +7,15 @@ module.exports = jwt({
     path:[
         '/',
         '/admin/login',
+        '/admin/userInfo',
         '/admin/paylist',
+        '/admin/paytypeList',
         '/admin/addPay',
-        '/admin/deletePay'
+        '/admin/deletePay',
+        '/admin/addUser',
+        '/admin/addPayType',
+        '/admin/beuseList',
+        '/admin/addBeuse',
+        '/admin/saveBeuseList'
     ]
 })
