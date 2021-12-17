@@ -228,8 +228,16 @@ exports.addUser=async(req,res)=>{
 
 //支出类型
 exports.beuseList = async(req,res)=>{
-    let sql = 'select * from beuse order by createTime desc'
+    let sql = 'select * from beuse order'
+    let sort = 'by createTime desc'
     let info = []
+    let filter = []
+    const state = req.body.state
+    if(state){
+        filter='where beuse = ?'
+        info = [state]
+    }
+    sql = `${sql} ${filter} ${sort}`
     const results = await query(sql,info)
     if(!results){
         data={
@@ -248,7 +256,7 @@ exports.addBeuse=async(req,res)=>{
     let info = [req.body.beType,req.body.color]
     const beuse = req.body.beuse
     if(beuse){
-        sql = `updata beuse set beType = ? and color = ? where beuse = ${beuse}`
+        sql = `update beuse set beType = ?,color = ? where beuse = ${beuse}`
     }
     const results = await query(sql,info)
     if(!results){
